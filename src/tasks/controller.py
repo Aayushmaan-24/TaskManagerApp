@@ -41,9 +41,11 @@ def update_task(task_id: int, body: TaskSchema, db:Session):
     task = db.query(TaskModel).get(task_id)
     if not task:
         return HTTPException(status_code = status.HTTP_404_NOT_FOUND, detail="Task not found!")
-    task.title = body.title
-    task.description = body.description
-    task.is_completed = body.is_completed
+    
+    body = body.model_dump()
+    for key, value in body.items():
+        setattr(task, key, value)
+    
     db.add(task)
     db.commit()
     db.refresh(task)
@@ -52,3 +54,5 @@ def update_task(task_id: int, body: TaskSchema, db:Session):
         "status": "Task updated successfully!",
         "data": task
     }
+    
+
