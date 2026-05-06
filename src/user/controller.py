@@ -1,3 +1,4 @@
+from math import exp
 from src.user.dtos import UserSchema, UserResponseSchema, UserLoginSchema
 from src.user.models import UserModel
 from sqlalchemy.orm import Session
@@ -5,6 +6,7 @@ from fastapi import HTTPException, status
 from pwdlib import PasswordHash
 import jwt
 from src.utils.settings import settings
+from datetime import datetime, timedelta
 
 password_hash = PasswordHash.recommended()
 
@@ -50,7 +52,9 @@ def login_user(body: UserLoginSchema, db: Session):
         if not verify_password(body.password, is_user_exist.hashed_password):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid password")
         
-        token = jwt.encode({"_id":is_user_exist.id, "username":is_user_exist.username}, settings.SECRET_KEY , settings.ALGORITHM)
+        expire_time = datetime.now() + timedelta(seconds=settings.EXP_TIME)
+        
+        token = jwt.encode({"_id":is_user_exist.id, "username":is_user_exist.username, "exp":expire_time}, settings.SECRET_KEY , settings.ALGORITHM)
         
         return {
             "token":token
